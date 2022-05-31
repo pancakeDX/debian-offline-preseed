@@ -37,8 +37,9 @@ dd if=$RAW_DEBIAN_ISO bs=1 count=432 of=isohdpfx.bin
 
 xorriso -as mkisofs -o $PRESEED_ISO \
 -isohybrid-mbr isohdpfx.bin \
--c isolinux/boot.cat -b isolinux/isolinux.bin \
--no-emul-boot -boot-load-size 4 -boot-info-table $WORKDIR
+-c isolinux/boot.cat -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table \
+-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat \
+$WORKDIR
 
 echo "---> Preseed config $PRESEED_FILE has been successfully merged into image $PRESEED_ISO"
 
