@@ -44,6 +44,11 @@ xorriso -osirrox on -indev "${RAW_DEBIAN_ISO}" -extract / "$WORKDIR" &>/dev/null
 chmod +w -R $WORKDIR
 log "👍 Extracted to $WORKDIR"
 
+# Copy custom files
+log "🧩 Adding custom file..."
+rsync -av --exclude='.gitignore' custom_files/* $WORKDIR/custom_files/ &> /dev/null
+log "👍 Added custom file..."
+
 # Inject preseed file
 log "🧩 Adding preseed file..."
 gunzip $WORKDIR/install.amd/initrd.gz
