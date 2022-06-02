@@ -34,12 +34,20 @@ PRESEED_ISO='./iso_destination/debian-11.3.0-amd64-offline-preseeded.iso'
 APTMOVE_CONFIG="$WORKDIR/apt-move.conf"
 CONFIG_DEB="$WORKDIR/config-deb"
 
+log "👶 Starting up..."
+
 # Prepare working folder
 if [[ ! "$WORKDIR" || ! -d "$WORKDIR" ]]; then
         die "💥 Could not create temporary working directory."
 else
         log "📁 Created temporary working directory $WORKDIR"
 fi
+
+log "🔎 Checking for required utilities..."
+[[ ! -x "$(command -v xorriso)" ]] && die "💥 xorriso is not installed. On Debian, install  the 'xorriso' package."
+[[ ! -x "$(command -v sed)" ]] && die "💥 sed is not installed. On Debian, install the 'sed' package."
+[[ ! -x "$(command -v rsync)" ]] && die "💥 rsync is not installed. On Debian, install the 'rsync' package."
+[[ ! -x "$(command -v apt-move)" ]] && die "💥 apt-move is not installed. On Debian, install the 'apt-move' package."
 
 # Extract image
 log "🔧 Extracting ISO image..."
@@ -76,14 +84,14 @@ log "🧩 Adding preseed file..."
 gunzip $WORKDIR/install.amd/initrd.gz
 echo $PRESEED_FILE | cpio -H newc -o -A -F $WORKDIR/install.amd/initrd &> /dev/null
 gzip $WORKDIR/install.amd/initrd
-log "👍 Added preseed file..."
+log "👍 Added preseed file."
 
 # Update md5sum
-log "🧩 Updating md5sum..."
+log "👷 Updating md5sum with hashes of modified files..."
 pushd $WORKDIR &> /dev/null
 find . -type f -exec md5sum "{}" \; > md5sum.txt
 popd &> /dev/null
-log "👍 Updated md5sum..."
+log "👍 Updated hashes."
 
 # Create ISO
 log "📦 Repackaging extracted files into an ISO image..."
