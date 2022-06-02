@@ -1,0 +1,24 @@
+# A config-deb file.
+# https://wiki.debian.org/DebianInstaller/Modify/CD#Accessing_the_New_Image.27s_Archive
+
+# Points to where the unpacked DVD-1 is.
+Dir {
+    ArchiveDir "cd";
+};
+
+# Sets the top of the .deb directory tree.
+TreeDefault {
+   Directory "pool/";
+};
+
+# The location for a Packages file.                
+BinDirectory "pool/main" {
+   Packages "dists/bullseye/main/binary-amd64/Packages";
+};
+
+# We are only interested in .deb files (.udeb for udeb files).                                
+Default {
+   Packages {
+       Extensions ".deb";
+    };
+};

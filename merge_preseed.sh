@@ -31,6 +31,9 @@ WORKDIR=$(mktemp -d)
 PRESEED_FILE='./preseed.cfg'
 PRESEED_ISO='./iso_destination/debian-11.3.0-amd64-offline-preseeded.iso'
 
+APTMOVE_CONFIG="$WORKDIR/apt-move.conf"
+CONFIG_DEB="$WORKDIR/config-deb"
+
 # Prepare working folder
 if [[ ! "$WORKDIR" || ! -d "$WORKDIR" ]]; then
         die "💥 Could not create temporary working directory."
@@ -48,6 +51,25 @@ log "👍 Extracted to $WORKDIR"
 log "🧩 Adding custom file..."
 rsync -av --exclude='.gitignore' custom_files/* $WORKDIR/custom_files/ &> /dev/null
 log "👍 Added custom file..."
+
+# Merge extra package files
+log "🧩 Merging extra package files into package pool..."
+cp apt-move.conf $WORKDIR/
+sed -i "s~/mirrors/debian~$WORKDIR/temp-packages~g" $APTMOVE_CONFIG
+sed -i "s~/packages~`pwd`/packages~g" $APTMOVE_CONFIG
+apt-move -c $APTMOVE_CONFIG update &> /dev/null
+rsync -ar $WORKDIR/temp-packages/pool/ $WORKDIR/pool/ &> /dev/null
+rm -rf $WORKDIR/temp-packages
+log "👍 Merged extra package files into package pool."
+
+# Updating Packages and Release
+log "🧩 Updating Packages and Release files..."
+cp config-deb $WORKDIR/
+sed -i "s~cd~$WORKDIR~g" $CONFIG_DEB
+apt-ftparchive generate $CONFIG_DEB &> /dev/null
+sed -i '/MD5Sum:/,$d' $WORKDIR/dists/bullseye/Release
+apt-ftparchive release $WORKDIR/dists/bullseye >> $WORKDIR/dists/bullseye/Release
+log "👍 Updated Packages and Release files."
 
 # Inject preseed file
 log "🧩 Adding preseed file..."
@@ -67,6 +89,9 @@ log "👍 Updated md5sum..."
 log "📦 Repackaging extracted files into an ISO image..."
 
 dd if=$RAW_DEBIAN_ISO bs=1 count=432 of=isohdpfx.bin &>/dev/null
+
+rm $APTMOVE_CONFIG
+rm $CONFIG_DEB
 
 xorriso -as mkisofs -o $PRESEED_ISO \
 -isohybrid-mbr isohdpfx.bin \
