@@ -86,6 +86,14 @@ echo $PRESEED_FILE | cpio -H newc -o -A -F $WORKDIR/install.amd/initrd &> /dev/n
 gzip $WORKDIR/install.amd/initrd
 log "👍 Added preseed file."
 
+# Change boot menu order
+log "🧩 Changing boot menu order..."
+sed -i '27,31H;36G;27,31d' $WORKDIR/boot/grub/grub.cfg
+sed -i '6h;7G;6d' $WORKDIR/isolinux/menu.cfg
+sed -i '4d' $WORKDIR/isolinux/gtk.cfg
+sed -i "$ i \	menu default" $WORKDIR/isolinux/txt.cfg
+log "👍 Changed boot menu order."
+
 # Update md5sum
 log "👷 Updating md5sum with hashes of modified files..."
 pushd $WORKDIR &> /dev/null
